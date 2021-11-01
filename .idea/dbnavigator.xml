@@ -24,11 +24,108 @@
     <autoscroll-to-editor value="false" />
     <autoscroll-from-editor value="true" />
     <show-object-properties value="true" />
-    <loaded-nodes />
+    <loaded-nodes>
+      <connection connection-id="f9f209f8-3d0b-46b8-b316-63da29d5743a">
+        <schema name="example" object-types="table, view" />
+        <schema name="shop" object-types="table, view, procedure, function" />
+      </connection>
+    </loaded-nodes>
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="f9f209f8-3d0b-46b8-b316-63da29d5743a">
-      <console name="MySQL-GB" type="STANDARD" schema="" session="Main"><![CDATA[show databases;]]></console>
+      <console name="MySQL-GB" type="STANDARD" schema="" session="Main"><![CDATA[DROP TABLE IF EXISTS catalogs;
+CREATE TABLE catalogs (id SERIAL PRIMARY KEY,name VARCHAR(255) COMMENT 'Название раздела',UNIQUE unique_name(name(10))) COMMENT = 'Разделы интернет-магазина';
+
+INSERT INTO catalogs VALUES
+  (DEFAULT, 'Процессоры'),
+  (DEFAULT, 'Мат.платы'),
+  (DEFAULT, 'Видеокарты');
+
+DROP TABLE IF EXISTS cat;
+CREATE TABLE cat (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255)
+);
+
+INSERT INTO
+  cat
+SELECT
+  *
+FROM
+  catalogs;
+SELECT * FROM cat;
+
+DROP TABLE IF EXISTS users;
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) COMMENT 'Имя покупателя',
+  birthday_at DATE COMMENT 'Дата рождения',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) COMMENT = 'Покупатели';
+
+DROP TABLE IF EXISTS products;
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) COMMENT 'Название',
+  desription TEXT COMMENT 'Описание',
+  price DECIMAL (11,2) COMMENT 'Цена',
+  catalog_id INT UNSIGNED,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY index_of_catalog_id (catalog_id)
+) COMMENT = 'Товарные позиции';
+
+DROP TABLE IF EXISTS orders;
+CREATE TABLE orders (
+  id SERIAL PRIMARY KEY,
+  user_id INT UNSIGNED,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY index_of_user_id(user_id)
+) COMMENT = 'Заказы';
+
+DROP TABLE IF EXISTS orders_products;
+CREATE TABLE orders_products (
+  id SERIAL PRIMARY KEY,
+  order_id INT UNSIGNED,
+  product_id INT UNSIGNED,
+  total INT UNSIGNED DEFAULT 1 COMMENT 'Количество заказанных товарных позиций',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) COMMENT = 'Состав заказа';
+
+DROP TABLE IF EXISTS discounts;
+CREATE TABLE discounts (
+  id SERIAL PRIMARY KEY,
+  user_id INT UNSIGNED,
+  product_id INT UNSIGNED,
+  discount FLOAT UNSIGNED COMMENT 'Величина скидки от 0.0 до 1.0',
+  started_at DATETIME,
+  finished_at DATETIME,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY index_of_user_id(user_id),
+  KEY index_of_product_id(product_id)
+) COMMENT = 'Скидки';
+
+DROP TABLE IF EXISTS storehouses;
+CREATE TABLE storehouses (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) COMMENT 'Название',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) COMMENT = 'Склады';
+
+DROP TABLE IF EXISTS storehouses_products;
+CREATE TABLE storehouses_products (
+  id SERIAL PRIMARY KEY,
+  storehouse_id INT UNSIGNED,
+  product_id INT UNSIGNED,
+  value INT UNSIGNED COMMENT 'Запас товарной позиции на складе',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) COMMENT = 'Запасы на складе';]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
@@ -45,6 +142,7 @@
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
     <mapping file-url="file://$PROJECT_DIR$/DB/sakila-db/sakila-schema.sql" connection-id="virtual-mysql-connection" session-id="MAIN" current-schema="" />
+    <mapping file-url="file://$PROJECT_DIR$/Scripts/shop.sql" connection-id="f9f209f8-3d0b-46b8-b316-63da29d5743a" session-id="MAIN" current-schema="shop" />
   </component>
   <component name="DBNavigator.Project.MethodExecutionManager">
     <method-browser />
@@ -62,7 +160,9 @@
     <filters />
   </component>
   <component name="DBNavigator.Project.ScriptExecutionManager" clear-outputs="true">
-    <recently-used-interfaces />
+    <recently-used-interfaces>
+      <mapping database-type="MYSQL" interface-id="DEFAULT" />
+    </recently-used-interfaces>
   </component>
   <component name="DBNavigator.Project.Settings">
     <connections>
@@ -72,20 +172,23 @@
           <description value="" />
           <database-type value="MYSQL" />
           <config-type value="BASIC" />
-          <database-version value="9999.0" />
+          <database-version value="8.0" />
           <driver-source value="BUILTIN" />
           <driver-library value="C:\Distrib\Искуственный интелект\MySQL\MySQL-GB" />
           <driver value="" />
           <url-type value="DATABASE" />
-          <host value="localhost" />
+          <host value="127.0.0.1" />
           <port value="3306" />
-          <database value="mysql" />
+          <database value="shop" />
           <type value="USER_PASSWORD" />
           <user value="root" />
           <deprecated-pwd value="UkBuZG9vbSQx" />
         </database>
         <properties>
           <auto-commit value="false" />
+          <properties>
+            <property key="serverTimezone" value="UTC" />
+          </properties>
         </properties>
         <ssh-settings>
           <active value="false" />
@@ -328,21 +431,21 @@
             <filter-element type="OBJECT" id="dblink" selected="true" />
           </user-schema>
           <public-schema>
-            <filter-element type="OBJECT" id="table" selected="false" />
-            <filter-element type="OBJECT" id="view" selected="false" />
-            <filter-element type="OBJECT" id="materialized view" selected="false" />
-            <filter-element type="OBJECT" id="index" selected="false" />
-            <filter-element type="OBJECT" id="constraint" selected="false" />
-            <filter-element type="OBJECT" id="trigger" selected="false" />
-            <filter-element type="OBJECT" id="synonym" selected="false" />
-            <filter-element type="OBJECT" id="sequence" selected="false" />
-            <filter-element type="OBJECT" id="procedure" selected="false" />
-            <filter-element type="OBJECT" id="function" selected="false" />
-            <filter-element type="OBJECT" id="package" selected="false" />
-            <filter-element type="OBJECT" id="type" selected="false" />
-            <filter-element type="OBJECT" id="dimension" selected="false" />
-            <filter-element type="OBJECT" id="cluster" selected="false" />
-            <filter-element type="OBJECT" id="dblink" selected="false" />
+            <filter-element type="OBJECT" id="table" selected="true" />
+            <filter-element type="OBJECT" id="view" selected="true" />
+            <filter-element type="OBJECT" id="materialized view" selected="true" />
+            <filter-element type="OBJECT" id="index" selected="true" />
+            <filter-element type="OBJECT" id="constraint" selected="true" />
+            <filter-element type="OBJECT" id="trigger" selected="true" />
+            <filter-element type="OBJECT" id="synonym" selected="true" />
+            <filter-element type="OBJECT" id="sequence" selected="true" />
+            <filter-element type="OBJECT" id="procedure" selected="true" />
+            <filter-element type="OBJECT" id="function" selected="true" />
+            <filter-element type="OBJECT" id="package" selected="true" />
+            <filter-element type="OBJECT" id="type" selected="true" />
+            <filter-element type="OBJECT" id="dimension" selected="true" />
+            <filter-element type="OBJECT" id="cluster" selected="true" />
+            <filter-element type="OBJECT" id="dblink" selected="true" />
           </public-schema>
           <any-schema>
             <filter-element type="OBJECT" id="table" selected="true" />
